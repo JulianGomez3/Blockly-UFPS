@@ -23,10 +23,35 @@ const outputDiv = document.getElementById('output');
 const blocklyDiv = document.getElementById('blocklyDiv');
 const ws = Blockly.inject(blocklyDiv, {toolbox});
 
-document.getElementById('guardarBtn').addEventListener('click', function() {
-  const nombreArchivo = prompt('Ingresa el nombre del archivo:');
-  if (nombreArchivo) {
-    guardarProyecto(nombreArchivo);
+document.getElementById('guardarBtn').addEventListener('click', function () {
+  var link = document.createElement('a');
+  link.href = '#';
+  link.download = 'nombre_del_archivo.xml';
+
+  if (typeof link.download === 'undefined') {
+    var fileDialog = document.createElement('input');
+    fileDialog.type = 'file';
+    fileDialog.accept = '.xml';
+    fileDialog.style.display = 'none';
+
+    fileDialog.addEventListener('change', function (event) {
+      var file = event.target.files[0];
+      if (file) {
+        guardarProyecto(file);
+      }
+    });
+
+    document.body.appendChild(fileDialog);
+    fileDialog.click();
+    document.body.removeChild(fileDialog);
+  } else {
+    link.addEventListener('click', function () {
+      guardarProyecto(link);
+    });
+
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   }
 });
 
@@ -65,19 +90,45 @@ function cargarProyecto(archivo) {
 }
 
 
-function guardarProyecto(nombreArchivo) {
+function guardarProyecto(file) {
   const xml = Blockly.Xml.workspaceToDom(ws);
   const xmlText = Blockly.Xml.domToText(xml);
 
-  const enlace = document.createElement('a');
-  enlace.href = 'data:text/xml;charset=utf-8,' + encodeURIComponent(xmlText);
-  enlace.download = nombreArchivo + '.xml';
-  enlace.style.display = 'none';
-  document.body.appendChild(enlace);
-  enlace.click();
-  document.body.removeChild(enlace);
+  var blob = new Blob([xmlText], { type: 'application/xml' });
 
-  console.log('Proyecto guardado en archivo local.');
+  if (typeof file.download === 'xml') {
+    var reader = new FileReader();
+    reader.onload = function (event) {
+      var save = document.createElement('a');
+      save.href = event.target.result;
+      save.target = '_blank';
+      save.download = file.name || 'nombre_del_archivo.xml';
+
+      var event = document.createEvent('MouseEvents');
+      event.initMouseEvent(
+        'click',
+        true,
+        false,
+        window,
+        0,
+        0,
+        0,
+        0,
+         /* left */ 0,
+        false,
+        false,
+        false,
+        false,
+        0,
+        null
+      );
+      save.dispatchEvent(event);
+      (window.URL || window.webkitURL).revokeObjectURL(save.href);
+    };
+    reader.readAsDataURL(blob);
+  } else {
+    file.href = (window.URL || window.webkitURL).createObjectURL(blob);
+  }
 }
 
 function guardarProyectoConExplorador(archivo) {
