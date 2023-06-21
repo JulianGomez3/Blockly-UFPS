@@ -8,7 +8,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "webpack --mode production",
     "pack": "electron-builder",
-    "start": "webpack serve --open --mode development"
+    "start": "electron ."
   },
   "keywords": [
     "blockly"
